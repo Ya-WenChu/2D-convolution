@@ -15,16 +15,43 @@ except IOError:
 
 
 imgToTensor = transforms.Compose([transforms.ToTensor()]) 
-input_img_tensor = (imgToTensor(img2))
+input_img_tensor = (imgToTensor(img1),imgToTensor(img2))
 
-# Task 1
-conv2d = Conv2D(in_channel=3, o_channel=1, kernel_size=3, stride=1, mode ='known')
-[Number_of_ops, output_image] = conv2d.forward(input_img_tensor)
-print('num of ops is ' , Number_of_ops)
+for num in range(len(input_img_tensor)):
+	
+	# Task 1
+	o_channel = 1
+	conv2d = Conv2D(in_channel=3, o_channel=1, kernel_size=3, stride=1, mode ='known')
+	[Number_of_ops, output_image] = conv2d.forward(input_img_tensor[num])
+	print('num of ops for Task 1 image %s is '%(num+1) , Number_of_ops)
 
-output_img_norm=(((output_image[:,:] - output_image[:,:].min()) / output_image[:,:].ptp()) * 255.0).astype(np.uint8)
-output_img_gray = Image.fromarray(output_img_norm)
+	output_image = output_image.numpy()
+	for i in range(o_channel):
+		output_img_norm=(((output_image[i,:,:] - output_image[i,:,:].min()) / output_image[i,:,:].ptp()) * 255.0).astype(np.uint8)
+		output_img_gray = Image.fromarray(output_img_norm)
+		output_img_gray.save('img%s_task1_channel%s.jpg'%(num+1,i))
 
-output_img_gray.save('eeeee.jpg')
-#output_img_gray = Image.fromarray(output_image)
-#output_img_gray.save('eeeee.jpg')
+	# Task 2
+	o_channel = 2
+	conv2d = Conv2D(in_channel=3, o_channel=2, kernel_size=5, stride=1, mode ='known')
+	[Number_of_ops, output_image] = conv2d.forward(input_img_tensor[num])
+	print('num of ops for Task 1 image %s is '%(num) , Number_of_ops)
+
+	output_image = output_image.numpy()
+	for i in range(o_channel):
+		output_img_norm=(((output_image[i,:,:] - output_image[i,:,:].min()) / output_image[i,:,:].ptp()) * 255.0).astype(np.uint8)
+		output_img_gray = Image.fromarray(output_img_norm)
+		output_img_gray.save('img%s_task2_channel%s.jpg'%(num+1,i))
+
+	# Task 3
+	o_channel = 3
+	conv2d = Conv2D(in_channel=3, o_channel=3, kernel_size=3, stride=2, mode='known')
+	[Number_of_ops, output_image] = conv2d.forward(input_img_tensor[num])
+	print('num of ops for Task 1 image %s is '%(num) , Number_of_ops)
+
+	output_image = output_image.numpy()
+	for i in range(o_channel):
+		output_img_norm=(((output_image[i,:,:] - output_image[i,:,:].min()) / output_image[i,:,:].ptp()) * 255.0).astype(np.uint8)
+		output_img_gray = Image.fromarray(output_img_norm)
+		output_img_gray.save('img%s_task3_channel%s.jpg'%(num+1,i))
+

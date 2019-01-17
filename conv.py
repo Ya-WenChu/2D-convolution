@@ -18,10 +18,10 @@ class Conv2D:
 		pass
 
 	def forward(self,input_image):
-		self.input = input_image #np.asarray(input_image)
+		self.input = input_image 
 		[channel, img_height, img_width] = self.input.size()
 		print(channel,img_height,img_width)
-		self.image_arr= self.input#np.hstack(self.input)
+		self.image_arr= self.input
 
 		# Task 1
 		if self.o_channel == 1:
@@ -35,47 +35,48 @@ class Conv2D:
 		elif self.o_channel == 3:
 			self.kernel = [self.k1, self.k2, self.k3]
 
-		kernel1 = torch.stack([self.k1 for i in range(self.in_channel)]) 
-		print(kernel1)
+		#kernel1 = torch.stack([self.k1 for i in range(self.in_channel)]) 
 
 		summation = 0
 		product = 0
 
-		for index in range(len(self.kernel)):
-			cur_kernel = self.kernel[index]
-			row = img_height#len(self.image_arr)
-			col = img_width#len(self.image_arr[0])
-			print('row',row)
-			print('col',col)
-			r_size = 1+int((row-self.kernel_size)/self.stride)
-			c_size = 1+int((col-self.kernel_size)/self.stride)
-			# create empty array
-			new_image = np.zeros((r_size, c_size), dtype=int)
-			print('r-size',r_size)
-			print('c-size',c_size)
+		for k in self.kernel:
+			print(k)
+			k = torch.stack([k for i in range(self.in_channel)])
+
+
+		row = img_height
+		col = img_width
+
+		r_size = 1+int((row-self.kernel_size)/self.stride)
+		c_size = 1+int((col-self.kernel_size)/self.stride)
+		# create empty array
+		new_image = torch.zeros(self.o_channel, r_size, c_size) #np.zeros((r_size, c_size), dtype=int)
+		print(new_image.size())
+
+
+		for index in range(self.o_channel):
+			k = self.kernel[index]
 			for i in range(r_size):
 				for j in range(c_size):
 					# perform calc
-					s = 0
 					# slice smaller image out from bigger image
-					#F = np.array(self.image_arr[ (i * self.kernel_size) : (i * self.kernel_size+self.kernel_size) , (j * self.kernel_size) : (j * self.kernel_size+self.kernel_size)])
 					F = self.image_arr[:, (i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
-					#F = np.fliplr(np.flipud(F))
-					#for n in range(self.kernel_size):
-					#	for m in range(self.kernel_size):
-							#print(F[n,m]*cur_kernel[n,m])
-					temp = torch.mul(kernel1,F)
+					#print('k size', k.size())
+					#print(F.size())
+					temp = torch.mul(k,F)
 
-					#		s =  s +(F[n,m]*cur_kernel[n,m])
-					summation += 1
-					product += 1
-							#print(s)
-					new_image[i,j] = temp.sum()#s
+					summation += self.kernel_size**self.kernel_size -1
+					product += self.kernel_size**self.kernel_size
+					new_image[index,i,j] = temp.sum()
 
+			#if(self.o_channel==1):
+		#		self.image_arr = torch.unsqueeze(new_image,0)
+		#	else:
+			#self.image_arr = new_image
 
-			self.image_arr = (new_image)
 			num_of_ops = summation+product
 
 			# flip the image
 
-			return (num_of_ops, self.image_arr)
+		return (num_of_ops, new_image)
