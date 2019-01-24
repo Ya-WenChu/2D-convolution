@@ -16,7 +16,7 @@ class Conv2D:
 		self.k3 = torch.Tensor([[1,  1,  1], [1, 1, 1], [1, 1, 1]])
 		self.k4 = torch.Tensor([[-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
 		self.k5 = torch.Tensor([[-1, -1, 0, 1, 1], [-1, -1, 0, 1, 1], [-1, -1, 0, 1, 1], [-1, -1, 0, 1, 1], [-1, -1, 0, 1, 1]])
-		self.k6 = torch.Tensor([[-1, -1, -1], [0, 0, 0], [1, 1, 1]] )
+		self.k6 = [[-1, -1, -1], [0, 0, 0], [1, 1, 1]] 
 		self.k7 = [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]
 		self.k8 = [[-1, 0, -1], [-2, 0, 2], [-1, 0, 1]]
 
@@ -25,48 +25,48 @@ class Conv2D:
 	def forward(self,input_image):
 		self.input = input_image 
 		[channel, img_height, img_width] = self.input.size()
-		#print(channel,img_height,img_width)
 		self.image_arr= self.input
 
 
 		# Task 1
 		if self.task == 1:
-			self.kernel = [self.k1]
+			self.kernel = self.k1
 			
 		# Task 2
 		elif self.task == 2:
-			self.kernel = [self.k2]
+			self.kernel = self.k2
 
 		# Task 3
 		elif self.task == 3:
-			self.kernel = [self.k3]
+			self.kernel = self.k3
 
 		# Task 4
 		elif self.task == 4:
-			self.kernel = [self.k4]
+			self.kernel = self.k4
 
 		# Task 5
 		elif self.task == 5:
-			self.kernel = [self.k5]
+			self.kernel = self.k5
 
 		# Task 6
 		elif self.task == 6:
-			self.kernel = [self.k6, self.k6, self.k6]
+			self.kernel = torch.Tensor([self.k6, self.k6, self.k6])
 
 		# Task 7
 		elif self.task == 7:
-			self.kernel = [torch.Tensor([self.k7, self.k7, self.k7]), torch.Tensor([self.k8, self.k8, self.k8])]
+			self.kernel = torch.Tensor([[self.k7, self.k7, self.k7], [self.k8, self.k8, self.k8]])
+		
+		#for k in self.kernel:
+		#	k = torch.stack([k for i in range(self.in_channel)])
 
 		# Task 8 and Task 9
 		if self.mode == 'rand':
-			self.kernel = torch.randn(self.kernel_size, self.kernel_size,self.kernel_size)
-		#kernel1 = torch.stack([self.k1 for i in range(self.in_channel)]) 
+			self.kernel = torch.randn(self.kernel_size,self.kernel_size)
+			self.kernel = torch.stack([self.kernel for i in range(self.in_channel)]) 
+
 		summation = 0
 		product = 0
-
-		for k in self.kernel:
-			#print(k)
-			k = torch.stack([k for i in range(self.in_channel)])
+		
 
 		row = img_height
 		col = img_width
@@ -76,31 +76,36 @@ class Conv2D:
 
 		# create empty array
 		new_image = torch.zeros(self.o_channel, r_size, c_size) #np.zeros((r_size, c_size), dtype=int)
-		#print(new_image.size())
 
+		if self.task == 6 or self.task == 7:
+			for index in range(self.o_channel):
+				k = self.kernel[index]
+				for i in range(r_size):
+					for j in range(c_size):
+						# perform calc
+						# slice smaller image out from bigger image
+						F = self.image_arr[:,(i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
+						temp = torch.mul(k,F)
 
-		for index in range(self.o_channel):
-			#k = self.kernel[index]
-			k = self.kernel
-			for i in range(r_size):
-				for j in range(c_size):
-					# perform calc
-					# slice smaller image out from bigger image
-					F = self.image_arr[:,(i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
-					#print('k size', k.size())
-					#print(F.size())
-					temp = torch.mul(k,F)
+						summation += self.kernel_size**self.kernel_size -1
+						product += self.kernel_size**self.kernel_size
+						new_image[index,i,j] = temp.sum()
+						num_of_ops = summation+product
 
-					summation += self.kernel_size**self.kernel_size -1
-					product += self.kernel_size**self.kernel_size
-					new_image[index,i,j] = temp.sum()
+		else:
+			for index in range(self.o_channel):
+				k = self.kernel
+				for i in range(r_size):
+					for j in range(c_size):
+						# perform calc
+						# slice smaller image out from bigger image
+						F = self.image_arr[:,(i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
+						temp = torch.mul(k,F)
 
-			#if(self.o_channel==1):
-		#		self.image_arr = torch.unsqueeze(new_image,0)
-		#	else:
-			#self.image_arr = new_image
-
-			num_of_ops = summation+product
+						summation += self.kernel_size**self.kernel_size -1
+						product += self.kernel_size**self.kernel_size
+						new_image[index,i,j] = temp.sum()
+						num_of_ops = summation+product
 
 
 		return (num_of_ops, new_image)

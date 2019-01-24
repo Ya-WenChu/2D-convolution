@@ -20,9 +20,9 @@ imgToTensor = transforms.Compose([transforms.ToTensor()])
 checkerboard = imgToTensor(img0)#(imgToTensor(img1),imgToTensor(img2))
 colorImage = imgToTensor(img1)
 
-'''
 
-	
+
+
 # Task 1
 o_channel = 1
 conv2d = Conv2D(in_channel=1, o_channel=1, kernel_size=3, stride=1, mode ='known', task=1)
@@ -106,7 +106,7 @@ for i in range(o_channel):
 	output_img_norm=(((output_image[i,:,:] - output_image[i,:,:].min()) / output_image[i,:,:].ptp()) * 255.0).astype(np.uint8)
 	output_img_gray = Image.fromarray(output_img_norm)
 	output_img_gray.save('task7_%s.jpg'%(i+1))
-'''
+
 
 # Part B Task 8
 time_taken = []
@@ -118,10 +118,23 @@ for i in range(0,10):
 	[Number_of_ops, output_image] = conv2d.forward(colorImage)
 	time_elapse = time.time() - start_time
 	time_taken.append(time_elapse)
-	print(Number_of_ops, time_elapse)
+	print(time_elapse)
 
-plt.plot([1,2,4,8,16,32,64,128,256,512,1024], time_taken, linewidth=2.0)
+plt.plot([1,2,4,8,16,32,64,128,256], time_taken)
+plt.show()
 
 
+# Part C Task 9
+k_size_arr = [3, 5, 7, 9, 11]
+num_op = []
+for i in range(0,5):
+	k_size = k_size_arr[i]
+	print(k_size)
+	conv2d = Conv2D(in_channel=3, o_channel=3, kernel_size=k_size, stride=1, mode='rand', task=9)
+	[Number_of_ops, output_image] = conv2d.forward(colorImage)
+	print(Number_of_ops)
+	num_op.append(Number_of_ops)
 
+plt.plot(k_size_arr, num_op)
+plt.show()
 
