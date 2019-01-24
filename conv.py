@@ -23,50 +23,53 @@ class Conv2D:
 		pass
 
 	def forward(self,input_image):
-		self.input = input_image 
+		self.input = input_image
 		[channel, img_height, img_width] = self.input.size()
-		self.image_arr= self.input
-
+		print(self.input.size())
 
 		# Task 1
 		if self.task == 1:
 			self.kernel = self.k1
+			self.image_arr = self.input[0]
 			
 		# Task 2
 		elif self.task == 2:
 			self.kernel = self.k2
+			self.image_arr = self.input[0]
 
 		# Task 3
 		elif self.task == 3:
 			self.kernel = self.k3
+			self.image_arr = self.input[0]
 
 		# Task 4
 		elif self.task == 4:
 			self.kernel = self.k4
+			self.image_arr = self.input[0]
 
 		# Task 5
 		elif self.task == 5:
 			self.kernel = self.k5
+			self.image_arr = self.input[0]
 
 		# Task 6
 		elif self.task == 6:
 			self.kernel = torch.Tensor([self.k6, self.k6, self.k6])
+			self.image_arr = self.input
 
 		# Task 7
 		elif self.task == 7:
 			self.kernel = torch.Tensor([[self.k7, self.k7, self.k7], [self.k8, self.k8, self.k8]])
-		
-		#for k in self.kernel:
-		#	k = torch.stack([k for i in range(self.in_channel)])
+			self.image_arr = self.input
 
 		# Task 8 and Task 9
 		if self.mode == 'rand':
+			self.image_arr = self.input
 			self.kernel = torch.randn(self.kernel_size,self.kernel_size)
 			self.kernel = torch.stack([self.kernel for i in range(self.in_channel)]) 
 
 		summation = 0
-		product = 0
-		
+		product = 0		
 
 		row = img_height
 		col = img_width
@@ -77,7 +80,38 @@ class Conv2D:
 		# create empty array
 		new_image = torch.zeros(self.o_channel, r_size, c_size) #np.zeros((r_size, c_size), dtype=int)
 
-		if self.task == 6 or self.task == 7:
+		if self.task == 1 or self.task == 2 or self.task == 3 or self.task == 4 or self.task == 5:
+			k = self.kernel
+			new_image = torch.zeros(r_size, c_size)
+			for i in range(r_size):
+				for j in range(c_size):
+					# perform calc
+					# slice smaller image out from bigger image
+					F = self.image_arr[(i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
+					temp = torch.mul(k,F)
+
+					summation += self.kernel_size**self.kernel_size -1
+					product += self.kernel_size**self.kernel_size
+					new_image[i,j] = temp.sum()
+					num_of_ops = summation+product
+			return (num_of_ops, new_image)
+
+		if self.task == 6:
+			k = self.kernel
+			new_image = torch.zeros(r_size, c_size)
+			for i in range(r_size):
+				for j in range(c_size):
+					F = self.image_arr[:,(i * self.stride) : (i * (self.stride) +self.kernel_size) , (j * self.stride) : (j * self.stride+self.kernel_size)]
+					temp = torch.mul(k,F)
+
+					summation += self.kernel_size**self.kernel_size -1
+					product += self.kernel_size**self.kernel_size
+					new_image[i,j] = temp.sum()
+					num_of_ops = summation+product
+			return (num_of_ops, new_image)
+
+		if self.task == 7:
+			new_image = torch.zeros(self.o_channel, r_size, c_size)
 			for index in range(self.o_channel):
 				k = self.kernel[index]
 				for i in range(r_size):
@@ -91,6 +125,7 @@ class Conv2D:
 						product += self.kernel_size**self.kernel_size
 						new_image[index,i,j] = temp.sum()
 						num_of_ops = summation+product
+
 
 		else:
 			for index in range(self.o_channel):
